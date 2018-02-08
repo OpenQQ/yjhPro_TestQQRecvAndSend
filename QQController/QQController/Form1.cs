@@ -2,6 +2,9 @@
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
+using System.Data.Entity.Core.Mapping;
+using System.Data.Entity.Core.Metadata.Edm;
+using System.Data.Entity.Infrastructure;
 using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Linq;
@@ -9,6 +12,7 @@ using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using QQController.BLL;
 
 namespace QQController
 {
@@ -20,17 +24,40 @@ namespace QQController
         [DllImport("user32.dll", CharSet = CharSet.Unicode)]
         public static extern bool ReleaseCapture();
 
+        private LoginService m_LoginService;
+
         public Form1()
         {
             InitializeComponent();
-            
+            m_LoginService = new LoginService();
         }
         /// <summary>
         /// 登陆
         /// </summary>
         private bool Login()
         {
-            return true;
+            var account = this.accountTbx.Text.Trim();
+            var password = this.pwdTbx.Text.Trim();
+            if (string.IsNullOrEmpty(account)|| account=="请输入账号")
+            {
+                MessageBox.Show("账号不能为空", "错误", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return false;
+            }
+
+            if (string.IsNullOrEmpty(password)|| password == "请输入密码")
+            {
+                MessageBox.Show("密码不能为空", "错误", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return false;
+            }
+            if (m_LoginService.CheckAccount(account, password))
+            {
+                return true;
+            }
+            else
+            {
+                MessageBox.Show("账号或密码错误", "错误", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return false;
+            }
         }
 
         private void button2_Click(object sender, EventArgs e)
@@ -198,6 +225,11 @@ namespace QQController
                 new Form2().Show();
                 this.Hide();
             }
+        }
+
+        private void Form1_Load(object sender, EventArgs e)
+        {
+
         }
     }
 }

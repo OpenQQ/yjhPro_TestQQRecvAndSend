@@ -14,6 +14,8 @@ namespace QQController.Entity.ViewModel
 
         public string Password { set; get; }
 
-        public string StatusDesc { set; get; }
+        public string StatusDesc => IsLogin ? "已登陆" : "未登录";
+
+        public bool IsLogin { set; get; }
     }
 }

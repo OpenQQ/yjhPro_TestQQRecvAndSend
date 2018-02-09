@@ -159,6 +159,7 @@ namespace QQController
             {
                 tbx.Text = "";
             }
+            tbx.PasswordChar = '*';
         }
 
         private void pwdTbx_Leave(object sender, EventArgs e)
@@ -167,6 +168,7 @@ namespace QQController
             if (tbx.Text == "")
             {
                 tbx.Text = "请输入密码";
+                tbx.PasswordChar = '\0';
             }
         }
 

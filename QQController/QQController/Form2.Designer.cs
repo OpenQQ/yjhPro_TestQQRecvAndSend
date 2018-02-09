@@ -320,6 +320,7 @@
             this.anchorBtn.TabIndex = 3;
             this.anchorBtn.Text = "定位";
             this.anchorBtn.UseVisualStyleBackColor = true;
+            this.anchorBtn.Click += new System.EventHandler(this.anchorBtn_Click);
             // 
             // getBtn
             // 
@@ -329,6 +330,7 @@
             this.getBtn.TabIndex = 1;
             this.getBtn.Text = "获取账号";
             this.getBtn.UseVisualStyleBackColor = true;
+            this.getBtn.Click += new System.EventHandler(this.getBtn_Click);
             // 
             // loginBtn
             // 

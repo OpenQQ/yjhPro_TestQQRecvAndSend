@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using QQController.Common;
 using QQController.Common.Enum;
 using QQController.DAL;
+using QQController.Entity;
 
 namespace QQController.BLL
 {
@@ -22,12 +23,12 @@ namespace QQController.BLL
         {
             var query = m_MainDbContext.QQAccountSet.Where(e =>
                 !e.IsD && !e.IsLogin && (e.State == (int) QQStateEnum.正常 || e.State == (int) QQStateEnum.限制));
-            return query.Skip((pageIndex - 1) * pageSize).Take(pageSize).Select(e => new QQAccountViewModel()
+            return query.OrderBy(e=>e.Id).Skip((pageIndex - 1) * pageSize).Take(pageSize).Select(e => new QQAccountViewModel()
             {
                 ID = e.Id,
                 QQAccount = e.QQNum,
                 Password = e.Password,
-                StatusDesc = e.StatusDesc
+                IsLogin = e.IsLogin
             }).ToList();
         }
 
@@ -75,6 +76,16 @@ namespace QQController.BLL
                 Logger.Info($"修改QQ({target.QQNum})登陆状态为{desc}失败");
                 return false;
             }
+        }
+
+        public void AddQQ(string qq, string pwd)
+        {
+            m_MainDbContext.QQAccountSet.Add(new QQAccount()
+            {
+                QQNum = qq,
+                Password = pwd
+            });
+            m_MainDbContext.SaveChanges();
         }
     }
 }

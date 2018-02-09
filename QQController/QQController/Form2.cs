@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Configuration;
 using System.Data;
 using System.Diagnostics;
 using System.Drawing;
@@ -9,6 +10,8 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using QQController.BLL;
+using QQController.Entity.ViewModel;
 
 namespace QQController
 {
@@ -17,7 +20,17 @@ namespace QQController
         public Form2()
         {
             InitializeComponent();
+            manageService = new QQAcountManageService();
+            AirPath = ConfigurationManager.AppSettings.Get("AirPath");
         }
+
+        private QQAcountManageService manageService;
+
+        private int pageIndex = 1;
+
+        private int pageSize = 10;
+
+        private string AirPath;
 
         public static int RunningInstanceCount(out int id)
         {
@@ -56,6 +69,52 @@ namespace QQController
             {
                 IsBackground = true
             }.Start();
+            this.listView1.CheckBoxes = true;
+            GetAccountViewModels();
+            int i = 0;
+            while (i < 100)
+            {
+                i++;
+                manageService.AddQQ("1","1");
+            }
+        }
+
+        public void GetAccountViewModels()
+        {
+            var list = manageService.GetAccountViewModels(pageIndex, pageSize);
+            if (list.Count > 0)
+            {
+                pageIndex++;
+                BindingData(list);
+            }
+            else
+            {
+                MessageBox.Show("没有QQ号了！", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            }
+        }
+
+        public void BindingData(List<QQAccountViewModel> list)
+        {
+            foreach (var item in list)
+            {
+                ListViewItem list_item = new ListViewItem();
+                list_item.SubItems.Add(item.ID.ToString());//xx为相应属性
+                list_item.SubItems.Add(item.QQAccount.ToString());
+                list_item.SubItems.Add(item.Password);
+                list_item.SubItems.Add(item.StatusDesc);
+                listView1.Items.Add(list_item);
+            }
+        }
+
+        public void UpdateStatusDesc(int id, string statusDesc)
+        {
+            foreach (ListViewItem item in listView1.Items)
+            {
+                if (item.SubItems[0].Text == id.ToString())
+                {
+                    item.SubItems[3].Text = statusDesc;
+                }
+            }
         }
 
         private void label1_Click(object sender, EventArgs e)
@@ -127,6 +186,34 @@ namespace QQController
             WindowState = FormWindowState.Normal;
             notifyIcon1.Visible = false;
             ShowInTaskbar = true;
+        }
+
+        private void getBtn_Click(object sender, EventArgs e)
+        {
+            GetAccountViewModels();
+        }
+
+        private void anchorBtn_Click(object sender, EventArgs e)
+        {
+            string findQQ = anchorQQTbx.Text.Trim();
+            if (findQQ == "请输入QQ号来定位")
+            {
+                MessageBox.Show("请输入QQ号", "警告", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+            }
+            else
+            {
+                foreach (ListViewItem item in listView1.Items)
+                {
+                    if (item.SubItems[2].Text == findQQ)
+                    {
+                        item.Selected = true;
+                        item.Checked = true;
+                        item.EnsureVisible();
+                        return;
+                    }
+                }
+                MessageBox.Show("找不到" + findQQ, "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
         }
     }
     public class CompareProcess : IComparer<Process>

@@ -9,6 +9,7 @@ using System.Threading.Tasks;
 using System.Runtime.InteropServices;
 using System.Threading;
 using System.Windows.Forms;
+using QQController.Common;
 
 namespace QQController
 {
@@ -69,25 +70,105 @@ namespace QQController
 
         public static void CreateQQProcess(string qq)
         {
+            while (true)
+            {
+                IntPtr hIntPtr = FindWindow("CQUI", "酷Q 5.11.10A (180130)");
+                if (hIntPtr != IntPtr.Zero)
+                {
+                    int pid = 0;
+                    GetWindowThreadProcessId(hIntPtr, out pid);
+                    if (pid != 0)
+                    {
+                        var process = Process.GetProcessById(pid);
+                        if (process != null)
+                        {
+                            process.Kill();
+                            process.Close();
+                        }
+                    }
+                }
+                else
+                {
+                    break;
+                }
+            }
+            
             Process p = new Process();
             p.StartInfo.FileName = Path.Combine(AirPath, "CQA.exe");
             p.StartInfo.UseShellExecute = false;
             p.Start();
-            Thread.Sleep(3000);
-            QqProcessDictionary.Add(qq, p.Id);
+            if (QqProcessDictionary.ContainsKey(qq))
+            {
+                var process = Process.GetProcessById(QqProcessDictionary[qq]);
+                if (process != null)
+                {
+                    process.Kill();
+                    process.Close();
+                }
+            }
+            QqProcessDictionary[qq] = p.Id;
         }
 
-        public static void LoginQQ(string qq, string pwd)
+        public static void LoginQQ(string qq, string pwd, Form2 form2)
         {
+            var pipe = new PipeServer("pipe_" + qq);
+            pipe.MessageReceviceEvent += Pipe_MessageReceviceEvent;
+            pipe.ReceviceMessage();
             int pid = QqProcessDictionary[qq];
-            //EnumWindows(Ewp, 0);
-            IntPtr hIntPtr = FindWindow("CQUI", "酷Q 5.11.10A (180130)");
-            MoveWindow(hIntPtr, -100, 0, 500, 400, true);
+            IntPtr hIntPtr = IntPtr.Zero;
+            var t = DateTime.Now;
+            while (hIntPtr == IntPtr.Zero)
+            {
+                hIntPtr = FindWindow("CQUI", "酷Q 5.11.10A (180130)");
+                if (DateTime.Now - t > new TimeSpan(0, 0, 10))
+                {
+                    break;
+                }
+            }
+            
+            MoveWindow(hIntPtr, -1000, -1000, 500, 400, true);
             ShowWindow(hIntPtr, SW_RESTORE);
             SetForegroundWindow(hIntPtr);
+            Thread.Sleep(50);
             SendMessage(hIntPtr, WM_SYSKEYDOWN, 0X09, 0);
+            Thread.Sleep(50);
             SendMessage(hIntPtr, WM_SYSKEYDOWN, 0X09, 0);
-            InputStr(hIntPtr, "123456789");
+            Thread.Sleep(50);
+            InputStr(hIntPtr, qq);
+            Thread.Sleep(50);
+            SendMessage(hIntPtr, WM_SYSKEYDOWN, 0X09, 0);
+            Thread.Sleep(50);
+            InputStr(hIntPtr, pwd);
+            Thread.Sleep(50);
+            SendMessage(hIntPtr, WM_SYSKEYDOWN, 0X09, 0);
+            Thread.Sleep(50);
+            SendMessage(hIntPtr, WM_SYSKEYDOWN, 0X0D, 0);
+            Thread.Sleep(50);
+            SendMessage(hIntPtr, WM_SYSKEYUP, 0X0D, 0);
+            Thread.Sleep(3000);
+            hIntPtr = FindWindow("CQUI", "酷Q 5.11.10A (180130)");
+            if (hIntPtr != IntPtr.Zero)
+            {
+                var p = Process.GetProcessById(pid);
+                if (p != null)
+                {
+                    p.Kill();
+                    p.Close();
+                }
+                pipe.Dispose();
+                QqProcessDictionary.Remove(qq);
+            }
+            else
+            {
+                // 登陆成功
+                form2.UpdateStatusDesc(qq, "登陆成功");
+                
+            }
+        }
+
+        private static void Pipe_MessageReceviceEvent(string msg)
+        {
+            Console.WriteLine(msg);
         }
 
         /// <summary>

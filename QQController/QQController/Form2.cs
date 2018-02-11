@@ -22,6 +22,7 @@ namespace QQController
             InitializeComponent();
             manageService = new QQAcountManageService();
             AirPath = ConfigurationManager.AppSettings.Get("AirPath");
+            CheckForIllegalCrossThreadCalls = false;
         }
 
         private QQAcountManageService manageService;
@@ -110,9 +111,22 @@ namespace QQController
         {
             foreach (ListViewItem item in listView1.Items)
             {
-                if (item.SubItems[0].Text == id.ToString())
+                if (item.SubItems[1].Text == id.ToString())
                 {
-                    item.SubItems[3].Text = statusDesc;
+                    item.SubItems[4].Text = statusDesc;
+                    break;
+                }
+            }
+        }
+
+        public void UpdateStatusDesc(string qq, string statusDesc)
+        {
+            foreach (ListViewItem item in listView1.Items)
+            {
+                if (item.SubItems[2].Text == qq)
+                {
+                    item.SubItems[4].Text = statusDesc;
+                    break;
                 }
             }
         }
@@ -214,6 +228,32 @@ namespace QQController
                 }
                 MessageBox.Show("找不到" + findQQ, "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
+        }
+
+        private void loginBtn_Click(object sender, EventArgs e)
+        {
+            var checkedItems = listView1.CheckedItems;
+            List<QQAccountViewModel> list = new List<QQAccountViewModel>();
+            foreach (ListViewItem item in checkedItems)
+            {
+                if (item.SubItems[4].Text != "登陆成功" && item.SubItems[4].Text != "已登陆")
+                {
+                    list.Add(new QQAccountViewModel()
+                    {
+                        Password = item.SubItems[3].Text,
+                        QQAccount = item.SubItems[2].Text
+                    });
+                }
+            }
+            new Thread(() =>
+            {
+                foreach (var item in list)
+                {
+                    Global.CreateQQProcess(item.QQAccount);
+                    Global.LoginQQ(item.QQAccount, item.Password, this);
+                }
+            })
+            { IsBackground = true}.Start();
         }
     }
     public class CompareProcess : IComparer<Process>

@@ -340,6 +340,7 @@
             this.loginBtn.TabIndex = 2;
             this.loginBtn.Text = "登陆";
             this.loginBtn.UseVisualStyleBackColor = true;
+            this.loginBtn.Click += new System.EventHandler(this.loginBtn_Click);
             // 
             // tabPage2
             // 

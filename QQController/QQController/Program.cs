@@ -25,9 +25,7 @@ namespace QQController
                 mappingCollection.GenerateViews(new List<EdmSchemaError>());
                 //对程序中定义的所有DbContext逐一进行这个操作
             }
-
-            Global.CreateQQProcess("1446426971");
-            Global.LoginQQ("1446426971", "123456");
+            
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
             Application.Run(new Form2());

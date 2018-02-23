@@ -5,12 +5,14 @@ using System.Configuration;
 using System.Data;
 using System.Diagnostics;
 using System.Drawing;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using QQController.BLL;
+using QQController.Common;
 using QQController.Entity.ViewModel;
 
 namespace QQController
@@ -26,6 +28,8 @@ namespace QQController
         }
 
         private QQAcountManageService manageService;
+
+        private Form4 dialog;
 
         private int pageIndex = 1;
 
@@ -72,12 +76,27 @@ namespace QQController
             }.Start();
             this.listView1.CheckBoxes = true;
             GetAccountViewModels();
-            int i = 0;
-            while (i < 100)
+            // 启动服务
+            new Thread(() =>
             {
-                i++;
-                manageService.AddQQ("1","1");
-            }
+                var server = new SocketServer();
+                server.StartServer(this);
+            })
+            {
+                IsBackground = true
+            }.Start();
+            // 刷新状态
+            new Thread(() =>
+            {
+                while (true)
+                {
+                    fresh();
+                    Thread.Sleep(1000);
+                }
+            })
+            {
+                IsBackground = true
+            }.Start();
         }
 
         public void GetAccountViewModels()
@@ -126,6 +145,14 @@ namespace QQController
                 if (item.SubItems[2].Text == qq)
                 {
                     item.SubItems[4].Text = statusDesc;
+                    if (statusDesc == "登陆成功")
+                    {
+                        manageService.UpdateQQIsLogin(Convert.ToInt32(item.SubItems[1].Text), true);
+                    }
+                    if (statusDesc == "掉线")
+                    {
+                        manageService.UpdateQQIsLogin(Convert.ToInt32(item.SubItems[1].Text), false);
+                    }
                     break;
                 }
             }
@@ -161,11 +188,35 @@ namespace QQController
             {
                 e.Cancel = true;
             }
+            else
+            {
+                foreach (var p in Process.GetProcessesByName("CQA"))
+                {
+                    p.Kill();
+                    p.Close();
+                }
+
+                foreach (ListViewItem item in listView1.Items)
+                {
+                    if (item.SubItems[4].Text == "登陆成功")
+                    {
+                        manageService.UpdateQQIsLogin(Convert.ToInt32(item.SubItems[1].Text), false);
+                    }
+                }
+            }
         }
 
         private void Form2_FormClosed(object sender, FormClosedEventArgs e)
         {
-            System.Environment.Exit(0);
+            try
+            {
+                Thread.Sleep(2000);
+                System.Environment.Exit(0);
+            }
+            catch (Exception exception)
+            {
+                Console.WriteLine(exception);
+            }
         }
 
         private void Form2_SizeChanged(object sender, EventArgs e)
@@ -232,6 +283,7 @@ namespace QQController
 
         private void loginBtn_Click(object sender, EventArgs e)
         {
+            loginBtn.Enabled = false;
             var checkedItems = listView1.CheckedItems;
             List<QQAccountViewModel> list = new List<QQAccountViewModel>();
             foreach (ListViewItem item in checkedItems)
@@ -245,6 +297,13 @@ namespace QQController
                     });
                 }
             }
+
+            if (list.Count <= 0)
+            {
+                loginBtn.Enabled = true;
+                MessageBox.Show("未选择账号", "消息");
+                return;
+            }
             new Thread(() =>
             {
                 foreach (var item in list)
@@ -252,8 +311,198 @@ namespace QQController
                     Global.CreateQQProcess(item.QQAccount);
                     Global.LoginQQ(item.QQAccount, item.Password, this);
                 }
+                this.Activate();
+
+                dialog.infoLab.Text = "所有操作完成！！！";
+                if (!dialog.Visible)
+                {
+                    dialog.ShowDialog();
+                }
+                Thread.Sleep(2000);
+                dialog.Close();
+                loginBtn.Enabled = true;
             })
             { IsBackground = true}.Start();
+            dialog = new Form4();
+            dialog.infoLab.Text = "开始登陆操作。。。";
+            dialog.ShowDialog();
+        }
+
+        private void listView1_MouseDown(object sender, MouseEventArgs e)
+        {
+            if (e.Button == MouseButtons.Right)
+            {
+            }
+        }
+
+        private void 全部勾选ToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            foreach (ListViewItem item in listView1.Items)
+            {
+                item.Checked = true;
+            }
+        }
+
+        private void 全部不选ToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            foreach (ListViewItem item in listView1.Items)
+            {
+                item.Checked = false;
+            }
+        }
+
+        private void 从此目标开始向上勾选ToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            bool flag = true;
+            if (listView1.SelectedItems.Count > 0)
+            {
+                var selected = listView1.SelectedItems[0];
+                foreach (ListViewItem item in listView1.Items)
+                {
+                    if (flag)
+                    {
+                        item.Checked = true;
+                        if (item.SubItems[1].Text == selected.SubItems[1].Text)
+                        {
+                            flag = false;
+                            item.Checked = true;
+                        }
+                    }
+                    else
+                    {
+                        item.Checked = false;
+                    }
+                }
+            }
+            
+        }
+
+        private void 从此目标开始向下勾选ToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            bool flag = false;
+            if (listView1.SelectedItems.Count > 0)
+            {
+                var selected = listView1.SelectedItems[0];
+                foreach (ListViewItem item in listView1.Items)
+                {
+                    if (!flag)
+                    {
+                        item.Checked = false;
+                        if (item.SubItems[1].Text == selected.SubItems[1].Text)
+                        {
+                            flag = true;
+                            item.Checked = true;
+                        }
+                    }
+                    else
+                    {
+                        item.Checked = true;
+                    }
+                }
+            }
+            fresh();
+        }
+
+        private void 勾选同此目标状态ToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            if (listView1.SelectedItems.Count > 0)
+            {
+                var selected = listView1.SelectedItems[0];
+                foreach (ListViewItem item in listView1.Items)
+                {
+                    if (item.SubItems[4].Text == selected.SubItems[4].Text)
+                    {
+                        item.Checked = true;
+                    }
+                    else
+                    {
+                        item.Checked = false;
+                    }
+                }
+            }
+        }
+
+        private void 删除选中ToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            foreach (ListViewItem item in listView1.CheckedItems)
+            {
+                listView1.Items.Remove(item);
+            }
+        }
+
+        private void fresh()
+        {
+            ChangeGet();
+            ChangeFailed();
+            ChangeLogin();
+            ChangeSelect();
+            ChangeDown();
+        }
+        private void ChangeGet()
+        {
+            getLab.Text = listView1.Items.Count.ToString();
+        }
+
+        private void ChangeSelect()
+        {
+            selectLab.Text = listView1.CheckedItems.Count.ToString();
+        }
+
+        private void ChangeLogin()
+        {
+            int count = 0;
+            foreach (ListViewItem item in listView1.Items)
+            {
+                if (item.SubItems[4].Text == "登陆成功")
+                {
+                    count++;
+                }
+            }
+            loginLab.Text = count.ToString();
+        }
+
+        private void ChangeFailed()
+        {
+            int count = 0;
+            foreach (ListViewItem item in listView1.Items)
+            {
+                if (item.SubItems[4].Text != "登陆成功" && item.SubItems[4].Text != "已登陆" && item.SubItems[4].Text != "未登录")
+                {
+                    count++;
+                }
+            }
+            failLab.Text = count.ToString();
+        }
+        private void ChangeDown()
+        {
+            int count = 0;
+            foreach (ListViewItem item in listView1.Items)
+            {
+                if (item.SubItems[4].Text == "掉线")
+                {
+                    count++;
+                }
+            }
+            offLineLab.Text = count.ToString();
+        }
+
+        private void tabControl1_Selected(object sender, TabControlEventArgs e)
+        {
+            string tmp = "";
+            string[] fileAllLines = File.ReadAllLines("log.txt");
+            for (int i = 0; i < 100 && i < fileAllLines.Length; i++)
+            {
+                if (fileAllLines.Length < 100)
+                {
+                    tmp += fileAllLines[i] + "\r\n";
+                }
+                else
+                {
+                    tmp += fileAllLines[fileAllLines.Length - 100 + i] + "\r\n";
+                }
+            }
+
+            logTbx.Text = tmp;
         }
     }
     public class CompareProcess : IComparer<Process>

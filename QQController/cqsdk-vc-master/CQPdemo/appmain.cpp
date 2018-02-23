@@ -10,14 +10,19 @@
 #include "appmain.h" //应用AppID等信息，请正确填写，否则酷Q可能无法加载
 #include "cstdio"
 #include <windows.h>  
-#include <ctime> 
-
+#include <ctime>
+#include<winsock2.h>
+#include<WS2tcpip.h>
+#include <process.h>
+#pragma comment(lib,"ws2_32.lib")
 using namespace std;
 
 int ac = -1; //AuthCode 调用酷Q的方法时需要用到
 bool enabled = false;
 HANDLE pipe = nullptr;
-
+SOCKET client = 0;
+char qq[20] = { 0 };
+const int MAX_NUM_BUF = 8192;
 /* 
 * 返回应用的ApiVer、Appid，打包后将不会调用
 */
@@ -56,7 +61,83 @@ CQEVENT(int32_t, __eventExit, 0)() {
 
 	return 0;
 }
+char* CountToBytes(const char * msg, int* retLen)
+{
+	char* tmp = new char[8192];
+	int len = strlen(msg);
+	*retLen = len + 4;
+	char c1 = char(len);
+	char c2 = char(len >> 8);
+	char c3 = char(len >> 16);
+	char c4 = char(len >> 24);
+	sprintf(tmp, "%c%c%c%c%s", c1, c2, c3, c4, msg);
+	return tmp;
+}
+int IndexOf(const char * str, char ch)
+{
+	for(int i = 0; i<strlen(str); i++)
+	{
+		if (str[i]==ch)
+		{
+			return i;
+		}
+	}
+	return -1;
+}
 
+bool recvData(SOCKET s, char* buf)
+{
+	BOOL retVal = TRUE;
+	bool bLineEnd = FALSE;      //行结束  
+	memset(buf, 0, MAX_NUM_BUF);        //清空接收缓冲区  
+	int  nReadLen = 0;          //读入字节数  
+
+	while (!bLineEnd)
+	{
+		nReadLen = recv(s, buf, MAX_NUM_BUF, 0);
+		if (SOCKET_ERROR == nReadLen)
+		{
+			int nErrCode = WSAGetLastError();
+			if (WSAEWOULDBLOCK == nErrCode)   //接受数据缓冲区不可用  
+			{
+				continue;                       //继续循环  
+			}
+			else if (WSAENETDOWN == nErrCode || WSAETIMEDOUT == nErrCode || WSAECONNRESET == nErrCode) //客户端关闭了连接  
+			{
+				retVal = FALSE; //读数据失败 
+				break;                          //线程退出  
+			}
+		}
+
+		if (0 == nReadLen)           //未读取到数据  
+		{
+			retVal = FALSE;
+			break;
+		}
+		
+		bLineEnd = TRUE;
+	}
+
+	return retVal;
+}
+
+DWORD WINAPI Fun1Proc (LPVOID lpThreadParameter)
+{
+	char buf[MAX_NUM_BUF] = { 0 };
+	while(true)
+	{
+		recvData(client, buf);
+		int index = IndexOf(buf, ',');
+		char qq[20] = { 0 };
+		if (index>=0)
+		{
+			strncpy_s(qq, buf, index);
+			CQ_sendPrivateMsg(ac, atoll(qq), buf + strlen(qq) + 1);
+		}
+		Sleep(1000);
+	}
+	return 0;
+}
 /*
 * Type=1003 应用已被启用
 * 当应用被启用后，将收到此事件。
@@ -64,37 +145,36 @@ CQEVENT(int32_t, __eventExit, 0)() {
 * 如非必要，不建议在这里加载窗口。（可以添加菜单，让用户手动打开窗口）
 */
 CQEVENT(int32_t, __eventEnable, 0)() {
-	int64_t qq = CQ_getLoginQQ(ac);
-	WCHAR qqStr[40] = { 0 };
-	wsprintf(qqStr, TEXT("pipe_%lld"), qq);
-	pipe = CreateFile(            //管道属于一种特殊的文件  
-		qqStr,    //创建的文件名  
-		GENERIC_READ | GENERIC_WRITE,   //文件模式  
-		0,                              //是否共享  
-		nullptr,                           //指向一个SECURITY_ATTRIBUTES结构的指针  
-		OPEN_EXISTING,                  //创建参数  
-		FILE_ATTRIBUTE_NORMAL,          //文件属性(隐藏,只读)NORMAL为默认属性  
-		nullptr);                          //模板创建文件的句柄
-	if (INVALID_HANDLE_VALUE == pipe)
+	// socket通信
+	client = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
+	if (client == INVALID_SOCKET)
 	{
-		CQ_addLog(ac, CQLOG_ERROR, "错误", "open the exit pipe failed!\n");
+		printf("invalid socket!");
+		return 0;
 	}
-	else
+
+	sockaddr_in serAddr;
+	serAddr.sin_family = AF_INET;
+	serAddr.sin_port = htons(50001);
+	inet_pton(AF_INET, "127.0.0.1", (void*)&serAddr.sin_addr.S_un.S_addr);
+	if (connect(client, (sockaddr *)&serAddr, sizeof(serAddr)) == SOCKET_ERROR) //与指定IP地址和端口的服务端连接
 	{
-		DWORD wlen = 0;
-		char msg[] = "hello， 你好！";
-		int len = strlen(msg);
-		char* buf = new char[len + 4];
-		buf[0] = char(len);
-		buf[1] = char(len >> 8);
-		buf[2] = char(len >> 16);
-		buf[3] = char(len >> 24);
-		for (int i = 0; i<len; i++)
-		{
-			buf[i + 4] = msg[0];
-		}
-		WriteFile(pipe, buf, sizeof(buf), &wlen, 0);
+		printf("connect error !");
+		closesocket(client);
+		return 0;
 	}
+	// 返回cookie
+	const char* cookies = CQ_getCookies(ac);
+	strncpy(qq, cookies + 5, IndexOf(cookies, ';') - 5);
+	char sendData2[2048]={0};
+	sprintf(sendData2, "0,%s,%s", qq, cookies);
+	int len = 0;
+	auto sendData = CountToBytes(sendData2, &len);
+	send(client, sendData, len, 0);
+	delete[] sendData;
+
+	// 创建子线程，发送消息
+	HANDLE hThread1 = CreateThread(NULL, 0, Fun1Proc, NULL, 0, NULL);
 	enabled = true;
 	return 0;
 }
@@ -117,7 +197,12 @@ CQEVENT(int32_t, __eventDisable, 0)() {
 * subType 子类型，11/来自好友 1/来自在线状态 2/来自群 3/来自讨论组
 */
 CQEVENT(int32_t, __eventPrivateMsg, 24)(int32_t subType, int32_t msgId, int64_t fromQQ, const char *msg, int32_t font) {
-
+	char sendData2[8188] = { 0 };
+	sprintf(sendData2, "1,%s,{\"SubType\": %d,\"FromQQ\": \"%lld\",\"Msg\":\"%s\"}",qq, 0, fromQQ, msg);
+	int len = 0;
+	auto sendData = CountToBytes(sendData2, &len);
+	send(client, sendData, len, 0);
+	delete[] sendData;
 	//如果要回复消息，请调用酷Q方法发送，并且这里 return EVENT_BLOCK - 截断本条消息，不再继续处理  注意：应用优先级设置为"最高"(10000)时，不得使用本返回值
 	//如果不回复消息，交由之后的应用/过滤器处理，这里 return EVENT_IGNORE - 忽略本条消息
 	return EVENT_IGNORE;
@@ -128,7 +213,12 @@ CQEVENT(int32_t, __eventPrivateMsg, 24)(int32_t subType, int32_t msgId, int64_t 
 * Type=2 群消息
 */
 CQEVENT(int32_t, __eventGroupMsg, 36)(int32_t subType, int32_t msgId, int64_t fromGroup, int64_t fromQQ, const char *fromAnonymous, const char *msg, int32_t font) {
-
+	char sendData2[8188] = { 0 };
+	sprintf(sendData2, "1,%s,{\"SubType\": %d,\"FromQQ\": \"%lld\",\"Msg\":\"%s\",\"GroupNum\":\"%lld\"}", qq, 2, fromQQ, msg, fromGroup);
+	int len = 0;
+	auto sendData = CountToBytes(sendData2, &len);
+	send(client, sendData, len, 0);
+	delete[] sendData;
 	return EVENT_IGNORE; //关于返回值说明, 见“_eventPrivateMsg”函数
 }
 
@@ -137,7 +227,12 @@ CQEVENT(int32_t, __eventGroupMsg, 36)(int32_t subType, int32_t msgId, int64_t fr
 * Type=4 讨论组消息
 */
 CQEVENT(int32_t, __eventDiscussMsg, 32)(int32_t subType, int32_t msgId, int64_t fromDiscuss, int64_t fromQQ, const char *msg, int32_t font) {
-
+	char sendData2[8188] = { 0 };
+	sprintf(sendData2, "1,%s,{\"SubType\": %d,\"FromQQ\": \"%lld\",\"Msg\":\"%s\",\"GroupNum\":\"%lld\"}", qq, 1, fromQQ, msg, fromDiscuss);
+	int len = 0;
+	auto sendData = CountToBytes(sendData2, &len);
+	send(client, sendData, len, 0);
+	delete[] sendData;
 	return EVENT_IGNORE; //关于返回值说明, 见“_eventPrivateMsg”函数
 }
 

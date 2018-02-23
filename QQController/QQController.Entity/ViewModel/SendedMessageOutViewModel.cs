@@ -14,6 +14,8 @@ namespace QQController.Entity.ViewModel
 
         public string Message { set; get; }
 
+        public int Id { set; get; }
+
         public object Clone()
         {
             return this.MemberwiseClone();

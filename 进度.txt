@@ -1,5 +1,0 @@
-1. 命名管道通信，使两个程序进行通信（QQController，酷Q）socket可以使用
-2. 发送消息（酷Q）（任务1 基础上（建立通信））
-3. 获取登陆状态（QQController）（弹窗的提示）
-4. 获取好友列表（QQController）（※难点）
-5. 接受消息（QQController）（任务1 基础上（建立通信））

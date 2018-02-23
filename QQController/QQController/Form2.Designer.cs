@@ -38,6 +38,13 @@
             this.columnHeader3 = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
             this.columnHeader4 = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
             this.columnHeader5 = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
+            this.contextMenuStrip2 = new System.Windows.Forms.ContextMenuStrip(this.components);
+            this.全部勾选ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.全部不选ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.从此目标开始向上勾选ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.从此目标开始向下勾选ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.勾选同此目标状态ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.删除选中ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.anchorQQTbx = new System.Windows.Forms.TextBox();
             this.panel1 = new System.Windows.Forms.Panel();
             this.offLineLab = new System.Windows.Forms.Label();
@@ -67,6 +74,7 @@
             this.toolStripMenuItem2 = new System.Windows.Forms.ToolStripMenuItem();
             this.tabControl1.SuspendLayout();
             this.tabPage1.SuspendLayout();
+            this.contextMenuStrip2.SuspendLayout();
             this.panel1.SuspendLayout();
             this.tabPage2.SuspendLayout();
             this.contextMenuStrip1.SuspendLayout();
@@ -86,6 +94,7 @@
             this.tabControl1.SelectedIndex = 0;
             this.tabControl1.Size = new System.Drawing.Size(393, 656);
             this.tabControl1.TabIndex = 0;
+            this.tabControl1.Selected += new System.Windows.Forms.TabControlEventHandler(this.tabControl1_Selected);
             // 
             // tabPage1
             // 
@@ -115,6 +124,7 @@
             this.columnHeader3,
             this.columnHeader4,
             this.columnHeader5});
+            this.listView1.ContextMenuStrip = this.contextMenuStrip2;
             this.listView1.FullRowSelect = true;
             this.listView1.GridLines = true;
             this.listView1.Location = new System.Drawing.Point(0, 0);
@@ -123,6 +133,7 @@
             this.listView1.TabIndex = 6;
             this.listView1.UseCompatibleStateImageBehavior = false;
             this.listView1.View = System.Windows.Forms.View.Details;
+            this.listView1.MouseDown += new System.Windows.Forms.MouseEventHandler(this.listView1_MouseDown);
             // 
             // columnHeader1
             // 
@@ -146,6 +157,60 @@
             // 
             this.columnHeader5.Text = "登陆状态";
             this.columnHeader5.Width = 120;
+            // 
+            // contextMenuStrip2
+            // 
+            this.contextMenuStrip2.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.全部勾选ToolStripMenuItem,
+            this.全部不选ToolStripMenuItem,
+            this.从此目标开始向上勾选ToolStripMenuItem,
+            this.从此目标开始向下勾选ToolStripMenuItem,
+            this.勾选同此目标状态ToolStripMenuItem,
+            this.删除选中ToolStripMenuItem});
+            this.contextMenuStrip2.Name = "contextMenuStrip2";
+            this.contextMenuStrip2.Size = new System.Drawing.Size(197, 136);
+            // 
+            // 全部勾选ToolStripMenuItem
+            // 
+            this.全部勾选ToolStripMenuItem.Name = "全部勾选ToolStripMenuItem";
+            this.全部勾选ToolStripMenuItem.Size = new System.Drawing.Size(196, 22);
+            this.全部勾选ToolStripMenuItem.Text = "全部勾选";
+            this.全部勾选ToolStripMenuItem.Click += new System.EventHandler(this.全部勾选ToolStripMenuItem_Click);
+            // 
+            // 全部不选ToolStripMenuItem
+            // 
+            this.全部不选ToolStripMenuItem.Name = "全部不选ToolStripMenuItem";
+            this.全部不选ToolStripMenuItem.Size = new System.Drawing.Size(196, 22);
+            this.全部不选ToolStripMenuItem.Text = "全部不选";
+            this.全部不选ToolStripMenuItem.Click += new System.EventHandler(this.全部不选ToolStripMenuItem_Click);
+            // 
+            // 从此目标开始向上勾选ToolStripMenuItem
+            // 
+            this.从此目标开始向上勾选ToolStripMenuItem.Name = "从此目标开始向上勾选ToolStripMenuItem";
+            this.从此目标开始向上勾选ToolStripMenuItem.Size = new System.Drawing.Size(196, 22);
+            this.从此目标开始向上勾选ToolStripMenuItem.Text = "从此目标开始向上勾选";
+            this.从此目标开始向上勾选ToolStripMenuItem.Click += new System.EventHandler(this.从此目标开始向上勾选ToolStripMenuItem_Click);
+            // 
+            // 从此目标开始向下勾选ToolStripMenuItem
+            // 
+            this.从此目标开始向下勾选ToolStripMenuItem.Name = "从此目标开始向下勾选ToolStripMenuItem";
+            this.从此目标开始向下勾选ToolStripMenuItem.Size = new System.Drawing.Size(196, 22);
+            this.从此目标开始向下勾选ToolStripMenuItem.Text = "从此目标开始向下勾选";
+            this.从此目标开始向下勾选ToolStripMenuItem.Click += new System.EventHandler(this.从此目标开始向下勾选ToolStripMenuItem_Click);
+            // 
+            // 勾选同此目标状态ToolStripMenuItem
+            // 
+            this.勾选同此目标状态ToolStripMenuItem.Name = "勾选同此目标状态ToolStripMenuItem";
+            this.勾选同此目标状态ToolStripMenuItem.Size = new System.Drawing.Size(196, 22);
+            this.勾选同此目标状态ToolStripMenuItem.Text = "勾选同此状态的目标";
+            this.勾选同此目标状态ToolStripMenuItem.Click += new System.EventHandler(this.勾选同此目标状态ToolStripMenuItem_Click);
+            // 
+            // 删除选中ToolStripMenuItem
+            // 
+            this.删除选中ToolStripMenuItem.Name = "删除选中ToolStripMenuItem";
+            this.删除选中ToolStripMenuItem.Size = new System.Drawing.Size(196, 22);
+            this.删除选中ToolStripMenuItem.Text = "删除选中条目";
+            this.删除选中ToolStripMenuItem.Click += new System.EventHandler(this.删除选中ToolStripMenuItem_Click);
             // 
             // anchorQQTbx
             // 
@@ -362,6 +427,7 @@
             this.logTbx.Multiline = true;
             this.logTbx.Name = "logTbx";
             this.logTbx.ReadOnly = true;
+            this.logTbx.ScrollBars = System.Windows.Forms.ScrollBars.Both;
             this.logTbx.Size = new System.Drawing.Size(385, 628);
             this.logTbx.TabIndex = 0;
             // 
@@ -429,6 +495,7 @@
             this.tabControl1.ResumeLayout(false);
             this.tabPage1.ResumeLayout(false);
             this.tabPage1.PerformLayout();
+            this.contextMenuStrip2.ResumeLayout(false);
             this.panel1.ResumeLayout(false);
             this.panel1.PerformLayout();
             this.tabPage2.ResumeLayout(false);
@@ -475,5 +542,12 @@
         private System.Windows.Forms.ToolStripMenuItem toolStripMenuItem1;
         private System.Windows.Forms.ToolStripSeparator toolStripSeparator1;
         private System.Windows.Forms.ToolStripMenuItem toolStripMenuItem2;
+        private System.Windows.Forms.ContextMenuStrip contextMenuStrip2;
+        private System.Windows.Forms.ToolStripMenuItem 全部勾选ToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem 全部不选ToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem 从此目标开始向上勾选ToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem 从此目标开始向下勾选ToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem 勾选同此目标状态ToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem 删除选中ToolStripMenuItem;
     }
 }

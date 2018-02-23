@@ -1,0 +1,23 @@
+2018/2/24 3:35:29	INFO	Message: 验证用户(admin)登陆成功
+2018/2/24 3:40:04	INFO	Message: 验证用户(admin)登陆成功
+2018/2/24 3:40:37	INFO	Message: 修改QQ(1446426971)为登陆成功
+2018/2/24 3:40:42	INFO	Message: 1561322601发送消息
+2018/2/24 3:40:42	INFO	Message: 修改QQ(1561322601)为登陆成功
+2018/2/24 3:40:45	INFO	Message: 1561322601发送消息
+2018/2/24 3:40:48	INFO	Message: 1561322601发送消息
+2018/2/24 3:40:51	INFO	Message: 1561322601发送消息
+2018/2/24 3:40:54	INFO	Message: 1561322601发送消息
+2018/2/24 3:40:55	INFO	Message: 修改QQ(1446426971)为登陆成功
+2018/2/24 3:40:55	INFO	Message: 修改QQ(1561322601)为登陆成功
+2018/2/24 3:40:57	Error	Message: System.Net.Sockets.SocketException (0x80004005): 远程主机强迫关闭了一个现有的连接。
+   在 System.Net.Sockets.Socket.BeginSend(Byte[] buffer, Int32 offset, Int32 size, SocketFlags socketFlags, AsyncCallback callback, Object state)
+   在 QQController.MessageProcessor.DealWidthSendMessage(Form2 form2)
+2018/2/24 3:42:03	INFO	Message: 验证用户(admin)登陆成功
+2018/2/24 3:44:42	INFO	Message: 验证用户(admin)登陆成功
+2018/2/24 3:44:51	INFO	Message: 修改QQ(1446426971)为登陆成功
+2018/2/24 3:44:54	INFO	Message: 1561322601发送消息
+2018/2/24 3:44:56	INFO	Message: 修改QQ(1561322601)为登陆成功
+2018/2/24 3:44:57	INFO	Message: 1561322601发送消息
+2018/2/24 3:45:01	INFO	Message: 1561322601发送消息
+2018/2/24 3:45:01	INFO	Message: 修改QQ(1446426971)为登陆成功
+2018/2/24 3:45:01	INFO	Message: 修改QQ(1561322601)为登陆成功

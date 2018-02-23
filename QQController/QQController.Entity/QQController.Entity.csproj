@@ -47,6 +47,7 @@
     <Compile Include="QQFriend.cs" />
     <Compile Include="ReceivcedMessage.cs" />
     <Compile Include="SendedMessage.cs" />
+    <Compile Include="ViewModel\FriendViewModel.cs" />
     <Compile Include="ViewModel\QQAccountViewModel.cs" />
     <Compile Include="ViewModel\SendedMessageOutViewModel.cs" />
   </ItemGroup>

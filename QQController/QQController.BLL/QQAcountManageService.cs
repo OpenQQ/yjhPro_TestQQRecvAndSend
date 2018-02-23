@@ -22,7 +22,7 @@ namespace QQController.BLL
         public List<QQAccountViewModel> GetAccountViewModels(int pageIndex = 1, int pageSize = 100)
         {
             var query = m_MainDbContext.QQAccountSet.Where(e =>
-                !e.IsD && !e.IsLogin && (e.State == (int) QQStateEnum.正常 || e.State == (int) QQStateEnum.限制));
+                !e.IsD && (e.State == (int) QQStateEnum.正常 || e.State == (int) QQStateEnum.限制));
             return query.OrderBy(e=>e.Id).Skip((pageIndex - 1) * pageSize).Take(pageSize).Select(e => new QQAccountViewModel()
             {
                 ID = e.Id,

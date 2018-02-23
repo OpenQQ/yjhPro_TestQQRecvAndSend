@@ -56,6 +56,7 @@ namespace QQController
             else
             {
                 MessageBox.Show("账号或密码错误", "错误", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                this.pwdTbx.Text = "";
                 return false;
             }
         }
@@ -105,12 +106,7 @@ namespace QQController
         {
             if ((int)e.KeyCode == 13)
             {
-                // TODO：登陆操作
-                if (Login())
-                {
-                    new Form2().Show();
-                    this.Hide();
-                }
+                pwdTbx.Focus();
                 e.SuppressKeyPress = true;
             }
         }

@@ -12,7 +12,6 @@ namespace QQController.Entity
     {
         [Key]
         public int Id { get; set; }
-        public Guid Guid { get; set; }
         public bool IsD { get; set; }
         public DateTime CreateTime { get; set; }
         public DateTime UpdateTime { get; set; }

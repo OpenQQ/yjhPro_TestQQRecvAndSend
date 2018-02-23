@@ -67,6 +67,10 @@
     <Compile Include="Migrations\201802080352290_initmodel.Designer.cs">
       <DependentUpon>201802080352290_initmodel.cs</DependentUpon>
     </Compile>
+    <Compile Include="Migrations\201802231038323_MainDbContext.cs" />
+    <Compile Include="Migrations\201802231038323_MainDbContext.Designer.cs">
+      <DependentUpon>201802231038323_MainDbContext.cs</DependentUpon>
+    </Compile>
     <Compile Include="Migrations\Configuration.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
@@ -83,6 +87,9 @@
   <ItemGroup>
     <EmbeddedResource Include="Migrations\201802080352290_initmodel.resx">
       <DependentUpon>201802080352290_initmodel.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Migrations\201802231038323_MainDbContext.resx">
+      <DependentUpon>201802231038323_MainDbContext.cs</DependentUpon>
     </EmbeddedResource>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

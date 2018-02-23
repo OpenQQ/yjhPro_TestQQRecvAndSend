@@ -1,9 +1,11 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Configuration;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Net.Sockets;
 using System.Text;
 using System.Threading.Tasks;
 using System.Runtime.InteropServices;
@@ -54,17 +56,17 @@ namespace QQController
 
         public static EnumWindowsProc Ewp = delegate(IntPtr hWnd, int param)
         {
-            int pid;
-            GetWindowThreadProcessId(hWnd, out pid);
-            if (QqProcessDictionary.ContainsValue(pid))
-            {
-                MessageBox.Show(hWnd.ToString(), "11", MessageBoxButtons.OK, MessageBoxIcon.Information);
-            }
+//            int pid;
+//            GetWindowThreadProcessId(hWnd, out pid);
+//            if (QqProcessDictionary.ContainsKey(pid))
+//            {
+//                MessageBox.Show(hWnd.ToString(), "11", MessageBoxButtons.OK, MessageBoxIcon.Information);
+//            }
             return true;
         };
 
-        // 存qq->ProcessId，Handle, Pipe
-        public static Dictionary<string, int> QqProcessDictionary = new Dictionary<string, int>();
+        // 存qq->ProcessId
+        public static ConcurrentDictionary<string, int> QqProcessDictionary = new ConcurrentDictionary<string, int>();
 
         public static string AirPath = ConfigurationManager.AppSettings.Get("AirPath");
 
@@ -82,8 +84,14 @@ namespace QQController
                         var process = Process.GetProcessById(pid);
                         if (process != null)
                         {
-                            process.Kill();
-                            process.Close();
+                            try
+                            {
+                                process.Kill();
+                                process.Close();
+                            }
+                            catch (Exception)
+                            {
+                            }
                         }
                     }
                 }
@@ -99,11 +107,18 @@ namespace QQController
             p.Start();
             if (QqProcessDictionary.ContainsKey(qq))
             {
-                var process = Process.GetProcessById(QqProcessDictionary[qq]);
-                if (process != null)
+                try
                 {
-                    process.Kill();
-                    process.Close();
+                    var process = Process.GetProcessById(QqProcessDictionary[qq]);
+                    if (process != null)
+                    {
+                        process.Kill();
+                        process.Close();
+                    }
+                }
+                catch (Exception e)
+                {
+                    Console.WriteLine(e);
                 }
             }
             QqProcessDictionary[qq] = p.Id;
@@ -111,9 +126,6 @@ namespace QQController
 
         public static void LoginQQ(string qq, string pwd, Form2 form2)
         {
-            var pipe = new PipeServer("pipe_" + qq);
-            pipe.MessageReceviceEvent += Pipe_MessageReceviceEvent;
-            pipe.ReceviceMessage();
             int pid = QqProcessDictionary[qq];
             IntPtr hIntPtr = IntPtr.Zero;
             var t = DateTime.Now;
@@ -150,13 +162,59 @@ namespace QQController
             if (hIntPtr != IntPtr.Zero)
             {
                 var p = Process.GetProcessById(pid);
+                hIntPtr = FindWindow(null, "错误");
+                if (hIntPtr != IntPtr.Zero)
+                {
+                    form2.UpdateStatusDesc(qq, "账号或密码错误");
+                }
+                else
+                {
+                    hIntPtr = FindWindow(null, "登录验证");
+                    if (hIntPtr != IntPtr.Zero)
+                    {
+                        form2.UpdateStatusDesc(qq, "设备锁限制");
+                    }
+                    else
+                    {
+                        DateTime start = DateTime.Now;
+                        while (false)
+                        {
+                            if (DateTime.Now - start >= new TimeSpan(0, 1, 0))
+                            {
+                                break;
+                            }
+                            // TODO:需要修改
+                            hIntPtr = FindWindow(null, "登陆验证");
+                            if (hIntPtr == IntPtr.Zero)
+                            {
+                                Thread.Sleep(1000);
+                            }
+                            else
+                            {
+                                hIntPtr = FindWindow("CQUI", "酷Q 5.11.10A (180130)");
+                                if (hIntPtr == IntPtr.Zero)
+                                {
+                                    form2.UpdateStatusDesc(qq, "登陆成功");
+
+                                    return;
+                                }
+                                else
+                                {
+                                    break;
+                                }
+                            }
+                        }
+                        form2.UpdateStatusDesc(qq, "其他错误");
+                    }
+                }
+                
+                
                 if (p != null)
                 {
                     p.Kill();
                     p.Close();
                 }
-                pipe.Dispose();
-                QqProcessDictionary.Remove(qq);
+                QqProcessDictionary.TryRemove(qq, out pid);
             }
             else
             {
@@ -164,11 +222,6 @@ namespace QQController
                 form2.UpdateStatusDesc(qq, "登陆成功");
                 
             }
-        }
-
-        private static void Pipe_MessageReceviceEvent(string msg)
-        {
-            Console.WriteLine(msg);
         }
 
         /// <summary>

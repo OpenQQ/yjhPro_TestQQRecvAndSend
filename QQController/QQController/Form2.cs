@@ -23,7 +23,6 @@ namespace QQController
         {
             InitializeComponent();
             manageService = new QQAcountManageService();
-            AirPath = ConfigurationManager.AppSettings.Get("AirPath");
             CheckForIllegalCrossThreadCalls = false;
         }
 
@@ -34,8 +33,6 @@ namespace QQController
         private int pageIndex = 1;
 
         private int pageSize = 10;
-
-        private string AirPath;
 
         public static int RunningInstanceCount(out int id)
         {

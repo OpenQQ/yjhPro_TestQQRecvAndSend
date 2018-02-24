@@ -1,17 +1,10 @@
 ﻿using System;
 using System.Collections.Concurrent;
-using System.Collections.Generic;
-using System.Configuration;
 using System.Diagnostics;
 using System.IO;
-using System.Linq;
-using System.Net.Sockets;
 using System.Text;
-using System.Threading.Tasks;
 using System.Runtime.InteropServices;
 using System.Threading;
-using System.Windows.Forms;
-using QQController.Common;
 
 namespace QQController
 {
@@ -68,7 +61,7 @@ namespace QQController
         // 存qq->ProcessId
         public static ConcurrentDictionary<string, int> QqProcessDictionary = new ConcurrentDictionary<string, int>();
 
-        public static string AirPath = ConfigurationManager.AppSettings.Get("AirPath");
+        public static string AirPath = System.AppDomain.CurrentDomain.BaseDirectory + "Air"; //ConfigurationManager.AppSettings.Get("AirPath");
 
         public static void CreateQQProcess(string qq)
         {
